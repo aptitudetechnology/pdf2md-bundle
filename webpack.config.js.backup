@@ -9,7 +9,7 @@ module.exports = {
     filename: 'pdf2md.bundle.js',
     library: 'pdf2md',
     libraryTarget: 'umd',
-    globalObject: "window"
+    globalObject: 'this'
   },
   resolve: {
     fallback: {
