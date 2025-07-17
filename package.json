@@ -1,60 +1,31 @@
 {
-  "name": "@opendocsg/pdf2md",
-  "version": "0.2.1",
-  "description": "A PDF to Markdown Converter",
-  "main": "lib/pdf2md.js",
-  "types": "types/pdf2md.d.ts",
-  "bin": {
-    "pdf2md": "lib/pdf2md-cli.js"
-  },
-  "files": [
-    "/lib",
-    "/test",
-    "/types"
-  ],
+  "name": "pdf2md-browser-bundle",
+  "version": "1.0.0",
+  "description": "Browser bundle for pdf2md library",
+  "main": "dist/pdf2md.bundle.js",
   "scripts": {
-    "lint": "eslint lib --cache",
-    "test": "mocha test --recursive",
-    "test:watch": "mocha test --recursive --watch",
-    "test:coverage": "nyc npm run test",
-    "check": "npm run lint && npm run test:coverage"
-  },
-  "keywords": [
-    "PDF",
-    "Markdown",
-    "Converter"
-  ],
-  "author": "Open Government Products, Government Technology Agency of Singapore (https://open.gov.sg)",
-  "contributors": [
-    "Johannes Zillmann"
-  ],
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/opendocsg/pdf2md"
-  },
-  "dependencies": {
-    "enumify": "^1.0.4",
-    "minimist": "^1.2.5",
-    "unpdf": "^0.12.1"
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
+    "watch": "webpack --mode development --watch"
   },
   "devDependencies": {
-    "@opengovsg/eslint-config-opengovsg": "^1.0.6",
-    "babel-eslint": "^10.0.2",
-    "chai": "^4.2.0",
-    "eslint": "^6.8.0",
-    "eslint-config-standard": "^13.0.1",
-    "eslint-plugin-flowtype": "^3.11.1",
-    "eslint-plugin-flowtype-comment": "^1.0.0",
-    "eslint-plugin-import": "^2.18.0",
-    "eslint-plugin-jasmine": "^2.2.0",
-    "eslint-plugin-node": "^9.1.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.0",
-    "flow-bin": "^0.102.0",
-    "mocha": "^10.2.0",
-    "mock-fs": "^4.10.1",
-    "nyc": "^15.1.0",
-    "rewire": "^5.0.0"
+    "@babel/core": "^7.22.0",
+    "@babel/preset-env": "^7.22.0",
+    "babel-loader": "^9.1.0",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.0",
+    "assert": "^2.0.0",
+    "buffer": "^6.0.3",
+    "browserify-zlib": "^0.2.0",
+    "crypto-browserify": "^3.12.0",
+    "https-browserify": "^1.0.0",
+    "os-browserify": "^0.3.0",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.0",
+    "util": "^0.12.4",
+    "vm-browserify": "^1.1.2"
   }
 }

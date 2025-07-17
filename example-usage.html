@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to Markdown Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .markdown-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .buttons {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDF to Markdown Converter</h1>
+        <p>Convert PDF files to Markdown format directly in your browser.</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <input type="file" id="fileInput" accept=".pdf" />
+            <div>
+                <h3>📄 Drop PDF file here or click to browse</h3>
+                <p>Supports PDF files up to 10MB</p>
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <button class="btn" onclick="document.getElementById('fileInput').click()">
+                Select PDF File
+            </button>
+        </div>
+        
+        <div id="result" class="result" style="display: none;">
+            <h3>Conversion Result:</h3>
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <!-- Include the pdf2md bundle -->
+    <script src="dist/pdf2md.bundle.js"></script>
+    
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const result = document.getElementById('result');
+        const output = document.getElementById('output');
+
+        // File input change handler
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        async function processFile(file) {
+            if (!file.type.includes('pdf')) {
+                showError('Please select a PDF file.');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                showError('File size exceeds 10MB limit.');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                // Convert PDF to markdown using the bundled library
+                const markdown = await pdf2md(file, {
+                    // Optional callbacks for progress tracking
+                    onProgress: (progress) => {
+                        console.log('Progress:', progress);
+                    }
+                });
+
+                showSuccess(markdown);
+            } catch (error) {
+                console.error('Conversion error:', error);
+                showError('Failed to convert PDF: ' + error.message);
+            }
+        }
+
+        function showLoading() {
+            result.style.display = 'block';
+            output.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Converting PDF to Markdown...</p>
+                </div>
+            `;
+        }
+
+        function showSuccess(markdown) {
+            output.innerHTML = `
+                <div class="success">
+                    ✅ PDF successfully converted to Markdown!
+                </div>
+                <div class="buttons">
+                    <button class="btn" onclick="downloadMarkdown()">Download Markdown</button>
+                    <button class="btn" onclick="copyToClipboard()">Copy to Clipboard</button>
+                </div>
+                <div class="markdown-output" id="markdownOutput">${escapeHtml(markdown)}</div>
+            `;
+            
+            // Store the markdown for download/copy functions
+            window.currentMarkdown = markdown;
+        }
+
+        function showError(message) {
+            result.style.display = 'block';
+            output.innerHTML = `
+                <div class="error">
+                    ❌ ${message}
+                </div>
+            `;
+        }
+
+        function downloadMarkdown() {
+            if (!window.currentMarkdown) return;
+            
+            const blob = new Blob([window.currentMarkdown], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'converted.md';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function copyToClipboard() {
+            if (!window.currentMarkdown) return;
+            
+            navigator.clipboard.writeText(window.currentMarkdown).then(() => {
+                alert('Markdown copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
