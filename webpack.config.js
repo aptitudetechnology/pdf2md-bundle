@@ -50,7 +50,11 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        exclude: /node_modules/,
+        // MODIFIED LINE HERE:
+        // Transpile all .js files EXCEPT those in node_modules that are NOT unpdf or enumify
+        // This regex means: "match node_modules/ followed by anything that IS NOT (unpdf or enumify)"
+        // So it EXCLUDES everything *else* in node_modules, effectively including unpdf and enumify.
+        exclude: /node_modules\/(?!(unpdf|enumify)\/).*/,
         use: {
           loader: 'babel-loader',
           options: {
