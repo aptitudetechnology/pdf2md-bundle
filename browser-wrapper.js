@@ -1,32 +1,9 @@
 // browser-wrapper.js
-// This file provides a browser-compatible interface to the pdf2md library (for Webpack UMD build)
+// This is the only wrapper you need for pdf2md in the browser
 
+import { convert } from 'unpdf';
 import { Buffer } from 'buffer';
 
-// Try loading the core pdf2md logic from possible locations
-let pdf2mdModule;
-
-try {
-  pdf2mdModule = await import('./src/index.js');
-} catch (error1) {
-  console.warn('Failed to load ./src/index.js:', error1.message);
-
-  try {
-    pdf2mdModule = await import('./index.js');
-  } catch (error2) {
-    try {
-      pdf2mdModule = await import('./lib/index.js');
-    } catch (error3) {
-      console.error('Could not load pdf2md module from any known path');
-      throw new Error('pdf2md module not found');
-    }
-  }
-}
-
-// Normalize default vs named export
-const convertFn = pdf2mdModule.convert || pdf2mdModule.default || pdf2mdModule;
-
-// Main browser-facing wrapper
 const pdf2md = {
   version: '0.2.1',
 
@@ -45,11 +22,7 @@ const pdf2md = {
       }
     }
 
-    if (typeof convertFn === 'function') {
-      return await convertFn(pdfBuffer, options);
-    }
-
-    throw new Error('No valid conversion function found');
+    return await convert(pdfBuffer, options);
   },
 
   fileToBuffer(file) {
