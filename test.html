@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF2MD Test</title>
+</head>
+<body>
+    <h1>PDF2MD Bundle Test</h1>
+    <input type="file" id="pdfFile" accept=".pdf">
+    <button onclick="convertPDF()">Convert PDF</button>
+    <pre id="result"></pre>
+    
+    <script src="dist/pdf2md.bundle.js"></script>
+    <script>
+        async function convertPDF() {
+            const fileInput = document.getElementById('pdfFile');
+            const resultDiv = document.getElementById('result');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.textContent = 'Please select a PDF file';
+                return;
+            }
+            
+            try {
+                console.log('pdf2md object:', pdf2md);
+                const buffer = await pdf2md.fileToBuffer(fileInput.files[0]);
+                const markdown = await pdf2md.convert(buffer);
+                resultDiv.textContent = markdown;
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+                console.error('Conversion error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

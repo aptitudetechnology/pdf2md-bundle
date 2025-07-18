@@ -1,13 +1,13 @@
-// Browser entry point for pdf2md
-// This is the main entry point for the webpack bundle
+// browser-entry.js
+// Browser entry point for pdf2md — for bundling with Webpack
 
-// Polyfill for global if needed
+// Optional global polyfill for environments that might not define `global`
 if (typeof global === 'undefined') {
-  global = globalThis;
+  globalThis.global = globalThis;
 }
 
-// Load the browser wrapper
-const pdf2md = require('./browser-wrapper');
+// Import the wrapper module (ensure browser-wrapper.js exports properly)
+import pdf2md from './browser-wrapper.js';
 
-// Export the module
-module.exports = pdf2md;
+// Export as default so Webpack exposes it to `window.pdf2md`
+export default pdf2md;
