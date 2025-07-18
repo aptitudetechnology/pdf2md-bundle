@@ -29,17 +29,10 @@ if [ ! -f "browser-entry.js" ]; then
     echo "Creating browser entry point..."
     cat > browser-entry.js << 'EOF'
 // Browser entry point for pdf2md
-// This is the main entry point for the webpack bundle
-
-// Polyfill for global if needed
 if (typeof global === 'undefined') {
   global = globalThis;
 }
-
-// Load the browser wrapper
 const pdf2md = require('./browser-wrapper');
-
-// Export the module
 module.exports = pdf2md;
 EOF
 fi
@@ -70,10 +63,8 @@ try {
 const pdf2md = {
   convert: async function(pdfBuffer, options = {}) {
     try {
-      if (!pdfBuffer) {
-        throw new Error('PDF buffer is required');
-      }
-      
+      if (!pdfBuffer) throw new Error('PDF buffer is required');
+
       if (!(pdfBuffer instanceof Buffer)) {
         if (pdfBuffer instanceof Uint8Array) {
           pdfBuffer = Buffer.from(pdfBuffer);
@@ -83,10 +74,10 @@ const pdf2md = {
           throw new Error('Invalid PDF data format');
         }
       }
-      
-      if (pdf2mdModule && typeof pdf2mdModule.convert === 'function') {
+
+      if (typeof pdf2mdModule?.convert === 'function') {
         return await pdf2mdModule.convert(pdfBuffer, options);
-      } else if (pdf2mdModule && typeof pdf2mdModule === 'function') {
+      } else if (typeof pdf2mdModule === 'function') {
         return await pdf2mdModule(pdfBuffer, options);
       } else {
         throw new Error('No valid conversion function found');
@@ -100,9 +91,7 @@ const pdf2md = {
   fileToBuffer: function(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = function(e) {
-        resolve(Buffer.from(e.target.result));
-      };
+      reader.onload = e => resolve(Buffer.from(e.target.result));
       reader.onerror = reject;
       reader.readAsArrayBuffer(file);
     });
@@ -121,7 +110,7 @@ export default pdf2md;
 EOF
 fi
 
-# Create .babelrc for more specific babel configuration
+# Create .babelrc for Babel configuration
 echo "Creating .babelrc..."
 cat > .babelrc << 'EOF'
 {
@@ -152,53 +141,71 @@ npm run build
 if [ -f "dist/pdf2md.bundle.js" ]; then
     echo "✅ Bundle created successfully at dist/pdf2md.bundle.js"
     echo "Bundle size: $(du -h dist/pdf2md.bundle.js | cut -f1)"
-    
-    # Create a simple test HTML file
+
+    # Create test.html with buttons to load additional scripts
     echo "Creating test HTML file..."
     cat > test.html << 'EOF'
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PDF2MD Test</title>
+  <title>PDF2MD Test</title>
 </head>
 <body>
-    <h1>PDF2MD Bundle Test</h1>
-    <input type="file" id="pdfFile" accept=".pdf">
-    <button onclick="convertPDF()">Convert PDF</button>
-    <pre id="result"></pre>
-    
-    <script src="dist/pdf2md.bundle.js"></script>
-    <script>
-        async function convertPDF() {
-            const fileInput = document.getElementById('pdfFile');
-            const resultDiv = document.getElementById('result');
-            
-            if (!fileInput.files[0]) {
-                resultDiv.textContent = 'Please select a PDF file';
-                return;
-            }
-            
-            try {
-                console.log('pdf2md object:', pdf2md);
-                const arrayBuffer = await fileInput.files[0].arrayBuffer();
-                const uint8Array = new Uint8Array(arrayBuffer);
-                const markdown = await pdf2md.convert(uint8Array);
+  <h1>PDF2MD Bundle Test</h1>
 
-                resultDiv.textContent = markdown;
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + error.message;
-                console.error('Conversion error:', error);
-            }
-        }
-    </script>
+  <input type="file" id="pdfFile" accept=".pdf">
+  <button onclick="convertPDF()">Convert PDF</button>
+  <button onclick="runRootCause()">Run Root Cause Check</button>
+  <button onclick="runTestBundle()">Run Test Bundle</button>
+
+  <pre id="result"></pre>
+
+  <script src="dist/pdf2md.bundle.js"></script>
+  <script>
+    async function convertPDF() {
+      const fileInput = document.getElementById('pdfFile');
+      const resultDiv = document.getElementById('result');
+
+      if (!fileInput.files[0]) {
+        resultDiv.textContent = 'Please select a PDF file';
+        return;
+      }
+
+      try {
+        const arrayBuffer = await fileInput.files[0].arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const markdown = await pdf2md.convert(uint8Array);
+        resultDiv.textContent = markdown;
+      } catch (error) {
+        resultDiv.textContent = 'Error: ' + error.message;
+        console.error('Conversion error:', error);
+      }
+    }
+
+    function runRootCause() {
+      const script = document.createElement('script');
+      script.src = 'root-cause.js';
+      script.onload = () => console.log('✅ root-cause.js loaded');
+      script.onerror = () => console.error('❌ Failed to load root-cause.js');
+      document.body.appendChild(script);
+    }
+
+    function runTestBundle() {
+      const script = document.createElement('script');
+      script.src = 'test-bundle.js';
+      script.onload = () => console.log('✅ test-bundle.js loaded');
+      script.onerror = () => console.error('❌ Failed to load test-bundle.js');
+      document.body.appendChild(script);
+    }
+  </script>
 </body>
 </html>
 EOF
+
     echo "✅ Test HTML file created at test.html"
 else
     echo "❌ Build failed - bundle not created"
     exit 1
 fi
 
-echo "Done! You can now use the bundle in your browser."
-echo "Open test.html in your browser to test the bundle."
+echo "🎉 Done! Open test.html in your browser to test the bundle."
