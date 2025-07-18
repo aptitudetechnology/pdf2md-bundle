@@ -180,8 +180,10 @@ if [ -f "dist/pdf2md.bundle.js" ]; then
             
             try {
                 console.log('pdf2md object:', pdf2md);
-                const buffer = await pdf2md.fileToBuffer(fileInput.files[0]);
-                const markdown = await pdf2md.convert(buffer);
+                const arrayBuffer = await fileInput.files[0].arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                const markdown = await pdf2md.convert(uint8Array);
+
                 resultDiv.textContent = markdown;
             } catch (error) {
                 resultDiv.textContent = 'Error: ' + error.message;
