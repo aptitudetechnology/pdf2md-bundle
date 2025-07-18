@@ -1,54 +1,84 @@
-// browser-wrapper.js
-// This file creates a browser-compatible wrapper for the pdf2md library
+// Browser wrapper for pdf2md
+// This file provides a browser-compatible interface to the pdf2md library
 
-// Import the main pdf2md function
-const pdf2md = require('./lib/pdf2md');
+let pdf2mdModule;
 
-// Browser-compatible version that works with File objects or ArrayBuffers
-function browserPdf2md(pdfInput, callbacks = {}) {
-  return new Promise((resolve, reject) => {
+// Try to load the main module with error handling
+try {
+  // First try to load the main module
+  pdf2mdModule = require('./src/index.js');
+} catch (error) {
+  console.warn('Failed to load main module, trying alternative paths:', error.message);
+  
+  // Try alternative paths
+  try {
+    pdf2mdModule = require('./index.js');
+  } catch (error2) {
     try {
-      let pdfBuffer;
-      
-      // Handle different input types
-      if (pdfInput instanceof File) {
-        // Convert File to ArrayBuffer then to Buffer
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          pdfBuffer = Buffer.from(e.target.result);
-          processPdf(pdfBuffer, callbacks, resolve, reject);
-        };
-        reader.onerror = reject;
-        reader.readAsArrayBuffer(pdfInput);
-        return;
-      } else if (pdfInput instanceof ArrayBuffer) {
-        pdfBuffer = Buffer.from(pdfInput);
-      } else if (pdfInput instanceof Uint8Array) {
-        pdfBuffer = Buffer.from(pdfInput);
-      } else if (Buffer.isBuffer(pdfInput)) {
-        pdfBuffer = pdfInput;
-      } else {
-        throw new Error('Invalid input type. Expected File, ArrayBuffer, Uint8Array, or Buffer');
+      pdf2mdModule = require('./lib/index.js');
+    } catch (error3) {
+      console.error('Could not load pdf2md module from any known path');
+      throw new Error('pdf2md module not found');
+    }
+  }
+}
+
+// Create a browser-compatible wrapper
+const pdf2md = {
+  // Main conversion function
+  convert: async function(pdfBuffer, options = {}) {
+    try {
+      if (!pdfBuffer) {
+        throw new Error('PDF buffer is required');
       }
       
-      processPdf(pdfBuffer, callbacks, resolve, reject);
+      // Ensure we have a Buffer
+      if (!(pdfBuffer instanceof Buffer)) {
+        if (pdfBuffer instanceof Uint8Array) {
+          pdfBuffer = Buffer.from(pdfBuffer);
+        } else if (typeof pdfBuffer === 'string') {
+          pdfBuffer = Buffer.from(pdfBuffer, 'base64');
+        } else {
+          throw new Error('Invalid PDF data format');
+        }
+      }
+      
+      // Call the main conversion function
+      if (pdf2mdModule && typeof pdf2mdModule.convert === 'function') {
+        return await pdf2mdModule.convert(pdfBuffer, options);
+      } else if (pdf2mdModule && typeof pdf2mdModule === 'function') {
+        return await pdf2mdModule(pdfBuffer, options);
+      } else {
+        throw new Error('No valid conversion function found');
+      }
     } catch (error) {
-      reject(error);
+      console.error('PDF conversion error:', error);
+      throw error;
     }
-  });
+  },
+
+  // Utility function to convert file to buffer
+  fileToBuffer: function(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        resolve(Buffer.from(e.target.result));
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  },
+
+  // Version info
+  version: '0.2.1'
+};
+
+// Export for different module systems
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = pdf2md;
+} else if (typeof window !== 'undefined') {
+  window.pdf2md = pdf2md;
 }
 
-function processPdf(pdfBuffer, callbacks, resolve, reject) {
-  // Call the original pdf2md function
-  pdf2md(pdfBuffer, callbacks)
-    .then(resolve)
-    .catch(reject);
-}
-
-// Export for browser use
-if (typeof window !== 'undefined') {
-  window.pdf2md = browserPdf2md;
-}
-
-// Export for module systems
-module.exports = browserPdf2md;
+// Also export as default for ES6 modules
+export default pdf2md;

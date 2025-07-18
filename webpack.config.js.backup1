@@ -9,10 +9,11 @@ module.exports = {
     filename: 'pdf2md.bundle.js',
     library: 'pdf2md',
     libraryTarget: 'umd',
-    globalObject: "typeof self !== 'undefined' ? self : this"
+    globalObject: "window"
   },
   resolve: {
     fallback: {
+      // Node.js core modules that need polyfills for browser
       "fs": false,
       "path": require.resolve("path-browserify"),
       "stream": require.resolve("stream-browserify"),
@@ -26,7 +27,7 @@ module.exports = {
       "https": require.resolve("https-browserify"),
       "http": require.resolve("stream-http"),
       "vm": require.resolve("vm-browserify"),
-      "canvas": false,
+      "canvas": false, // Canvas is not available in browser
       "worker_threads": false,
       "child_process": false,
       "process/browser": require.resolve("process/browser")
@@ -49,26 +50,15 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
+        // MODIFIED LINE HERE:
+        // Transpile all .js files EXCEPT those in node_modules that are NOT unpdf or enumify
+        // This regex means: "match node_modules/ followed by anything that IS NOT (unpdf or enumify)"
+        // So it EXCLUDES everything *else* in node_modules, effectively including unpdf and enumify.
         exclude: /node_modules\/(?!(unpdf|enumify)\/).*/,
         use: {
           loader: 'babel-loader',
           options: {
-            presets: [
-              ['@babel/preset-env', {
-                targets: {
-                  browsers: ['> 1%', 'last 2 versions']
-                },
-                modules: false, // Let webpack handle modules
-                loose: true // Use loose transformations for better compatibility
-              }]
-            ],
-            plugins: [
-              ['@babel/plugin-transform-classes', { loose: true }],
-              ['@babel/plugin-transform-runtime', {
-                helpers: false,
-                regenerator: true
-              }]
-            ]
+            presets: ['@babel/preset-env']
           }
         }
       },
