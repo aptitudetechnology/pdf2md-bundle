@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build script for pdf2md browser bundle
 
-echo "🔧 Setting up pdf2md browser bundle..."
+echo "🛠 Setting up pdf2md browser bundle..."
 
 # Clean previous builds
 echo "🧹 Cleaning previous builds..."
@@ -11,19 +11,19 @@ rm -rf node_modules/
 # Install dependencies
 echo "📦 Installing dependencies..."
 npm install
-
-echo "📦 Installing bundling dependencies..."
 npm install --save-dev webpack webpack-cli babel-loader @babel/core @babel/preset-env @babel/plugin-transform-classes @babel/plugin-transform-runtime
 npm install --save-dev assert buffer browserify-zlib crypto-browserify https-browserify os-browserify path-browserify process stream-browserify stream-http url util vm-browserify
-
-echo "📦 Installing library dependencies..."
 npm install enumify unpdf pdfjs-dist
 
-# Create .babelrc
-echo "📝 Writing .babelrc..."
+# Babel config
+echo "🧾 Creating .babelrc..."
 cat > .babelrc << 'EOF'
 {
-  "presets": [["@babel/preset-env", { "targets": "> 1%, last 2 versions", "modules": false, "loose": true }]],
+  "presets": [["@babel/preset-env", {
+    "targets": { "browsers": ["> 1%", "last 2 versions"] },
+    "modules": false,
+    "loose": true
+  }]],
   "plugins": [
     ["@babel/plugin-transform-classes", { "loose": true }],
     ["@babel/plugin-transform-runtime", { "helpers": false, "regenerator": true }]
@@ -31,16 +31,15 @@ cat > .babelrc << 'EOF'
 }
 EOF
 
-# Run Webpack build
-echo "🛠️ Building Webpack bundle..."
+# Build bundle
+echo "🔧 Building bundle..."
 npm run build
 
-# Check build result
+# Check if build succeeded
 if [ -f "dist/pdf2md.bundle.js" ]; then
-  echo "✅ Bundle created successfully: dist/pdf2md.bundle.js"
+  echo "✅ Bundle created at dist/pdf2md.bundle.js"
+  echo "📄 Generating test.html..."
 
-  # Generate test.html with buttons
-  echo "📝 Creating test.html..."
   cat > test.html << 'EOF'
 <!DOCTYPE html>
 <html>
@@ -105,10 +104,10 @@ if [ -f "dist/pdf2md.bundle.js" ]; then
 </html>
 EOF
 
-  echo "✅ test.html created. You can now open it in your browser."
+  echo "✅ test.html created with visible buttons!"
 else
-  echo "❌ Build failed: dist/pdf2md.bundle.js not found"
+  echo "❌ Build failed — bundle not found"
   exit 1
 fi
 
-echo "🏁 Done."
+echo "🎉 Done! Open test.html in your browser to test."
