@@ -98,12 +98,12 @@ function safeLoadModule() {
   let originalModule = null;
   
   // Try to load the original module safely
-  const possiblePaths = [
-    './src/index.js',
-    './index.js',
-    './lib/index.js',
-    './src/main.js'
-  ];
+ const possiblePaths = [
+  './lib/pdf2md.js',
+  './lib/pdf2md-cli.js',
+  './lib/index.js'
+];
+
 
   for (const path of possiblePaths) {
     try {
